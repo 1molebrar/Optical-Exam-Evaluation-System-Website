@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block title %}Add Course — Optical Exam System{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Add Course</h1>
+    <p class="page-subtitle">Create a new course offering.</p>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="app-card">
+            <div class="app-card-header">New Course</div>
+            <div class="app-card-body">
+                {% if error %}
+                <div class="alert alert-danger alert-app">{{ error }}</div>
+                {% endif %}
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="university_id" class="form-label">University</label>
+                        <select class="form-select" id="university_id" name="university_id" required>
+                            <option value="">— Select University —</option>
+                            {% for uni in universities %}
+                            <option value="{{ uni.id }}">{{ uni.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="code" class="form-label">Course Code</label>
+                        <input type="text" class="form-control" id="code" name="code" required placeholder="e.g., CS101">
+                    </div>
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Course Name</label>
+                        <input type="text" class="form-control" id="name" name="name" required>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="credit" class="form-label">Credit</label>
+                            <input type="number" class="form-control" id="credit" name="credit" value="3" min="1" max="12">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="ects" class="form-label">ECTS</label>
+                            <input type="number" class="form-control" id="ects" name="ects" value="3" min="1" max="30">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="instructor" class="form-label">Instructor</label>
+                            <input type="text" class="form-control" id="instructor" name="instructor" placeholder="e.g., Dr. Smith">
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-app btn-app-primary">Create Course</button>
+                        <a href="{% url 'course_list' %}" class="btn btn-app btn-app-outline">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

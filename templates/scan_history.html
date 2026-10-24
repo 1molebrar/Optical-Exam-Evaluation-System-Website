@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+
+{% block title %}Scan History — Optical Exam System{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex flex-wrap justify-content-between align-items-start gap-3">
+    <div>
+        <h1 class="page-title">Scan History</h1>
+        <p class="page-subtitle">All uploaded scanned answer sheets.</p>
+    </div>
+    <div class="toolbar mb-0">
+        <a href="{% url 'upload_scanned_paper' %}" class="btn btn-app btn-app-primary">
+            <i class="bi bi-upload me-1"></i>Upload Sheet
+        </a>
+    </div>
+</div>
+
+{% if scanned %}
+<div class="app-card">
+    <div class="app-card-header d-flex justify-content-between align-items-center">
+        <span>Uploaded Sheets</span>
+        <span class="badge badge-app badge-muted">{{ scanned|length }} scans</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-app mb-0">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Image</th>
+                    <th>OCR ID</th>
+                    <th>Student</th>
+                    <th>Exam</th>
+                    <th>Uploaded</th>
+                    <th>Status</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in scanned %}
+                <tr style="cursor: pointer;" onclick="window.location='{% url 'review_scanned' s.id %}'">
+                    <td>{{ s.id }}</td>
+                    <td>
+                        {% if s.image %}
+                        <img src="{{ s.image.url }}" class="rounded border" style="max-width: 80px; max-height: 80px;" alt="scan">
+                        {% endif %}
+                    </td>
+                    <td><code>{{ s.ocr_student_id|default:"—" }}</code></td>
+                    <td>{{ s.matched_student.full_name|default:"—" }}</td>
+                    <td>{{ s.matched_exam.title|default:"—" }}</td>
+                    <td>{{ s.uploaded_at|date:"Y-m-d H:i" }}</td>
+                    <td>
+                        {% with result=s.get_result %}
+                        {% if result %}
+                        <span class="badge badge-app badge-success">Graded</span>
+                        {% elif s.status == 'failed' %}
+                        <span class="badge badge-app badge-danger">Rejected</span>
+                        {% elif s.status == 'needs_review' or s.needs_review %}
+                        <span class="badge badge-app badge-warning">Review</span>
+                        {% elif s.processed %}
+                        <span class="badge badge-app badge-primary">Processed</span>
+                        {% else %}
+                        <span class="badge badge-app badge-muted">Pending</span>
+                        {% endif %}
+                        {% endwith %}
+                    </td>
+                    <td onclick="event.stopPropagation();" class="text-end">
+                        {% with result=s.get_result %}
+                        {% if result %}
+                        <a href="{% url 'result_detail' result.id %}" class="btn btn-app btn-app-success btn-sm">View Result</a>
+                        {% elif s.status == 'needs_review' or s.needs_review %}
+                        <a href="{% url 'review_scanned' s.id %}" class="btn btn-app btn-app-secondary btn-sm">Review</a>
+                        {% else %}
+                        <a href="{% url 'review_scanned' s.id %}" class="btn btn-app btn-app-outline btn-sm">Open</a>
+                        {% endif %}
+                        {% endwith %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="app-card">
+    <div class="empty-state">
+        <i class="bi bi-camera display-4 text-muted mb-3 d-block"></i>
+        <h4>No Scans Yet</h4>
+        <p>Upload your first scanned answer sheet to get started.</p>
+        <a href="{% url 'upload_scanned_paper' %}" class="btn btn-app btn-app-primary mt-2">Upload First Sheet</a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

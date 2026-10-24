@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block title %}Results — Optical Exam System{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex flex-wrap justify-content-between align-items-start gap-3">
+    <div>
+        <h1 class="page-title">Exam Results</h1>
+        <p class="page-subtitle">Select an exam to view each student's graded answer sheet.</p>
+    </div>
+    <div class="toolbar mb-0">
+        <a href="{% url 'upload_scanned_paper' %}" class="btn btn-app btn-app-primary">
+            <i class="bi bi-upload me-1"></i>Upload Sheet
+        </a>
+    </div>
+</div>
+
+{% if pending %}
+<div class="alert alert-warning alert-app d-flex align-items-center flex-wrap gap-2">
+    <i class="bi bi-exclamation-triangle me-1"></i>
+    <strong>{{ pending|length }}</strong> scan(s) need manual review.
+    <a href="{% url 'pending_reviews' %}" class="btn btn-app btn-app-secondary btn-sm">Review Now</a>
+</div>
+{% endif %}
+
+{% if exam_rows %}
+<div class="app-card mb-4">
+    <div class="app-card-header d-flex justify-content-between align-items-center">
+        <span>Registered Exams</span>
+        <span class="badge badge-app badge-muted">{{ exam_rows|length }} exam{{ exam_rows|length|pluralize }}</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-app mb-0">
+            <thead>
+                <tr>
+                    <th>Exam</th>
+                    <th>Course</th>
+                    <th>Date</th>
+                    <th>Enrolled</th>
+                    <th>Graded</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in exam_rows %}
+                <tr>
+                    <td><strong>{{ row.exam.title }}</strong></td>
+                    <td><span class="badge badge-app badge-primary">{{ row.exam.course.code }}</span></td>
+                    <td>{{ row.exam.exam_date|date:"M j, Y" }}</td>
+                    <td>{{ row.enrolled_count }}</td>
+                    <td>
+                        {% if row.result_count %}
+                        <span class="badge badge-app badge-success">{{ row.result_count }}</span>
+                        {% else %}
+                        <span class="badge badge-app badge-muted">0</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end">
+                        <a href="{% url 'exam_results' row.exam.id %}" class="btn btn-app btn-app-primary btn-sm">
+                            <i class="bi bi-people me-1"></i>View Results
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="app-card">
+    <div class="empty-state">
+        <i class="bi bi-journal-text display-4 text-muted mb-3 d-block"></i>
+        <h4>No Exams Yet</h4>
+        <p>Create an exam first, then upload scanned answer sheets. The QR code on each sheet links it to the correct exam.</p>
+        <a href="{% url 'exam_create' %}" class="btn btn-app btn-app-primary mt-2">Create Exam</a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,196 @@
+{% extends 'base.html' %}
+
+{% block title %}Result Detail — Optical Exam System{% endblock %}
+
+{% block content %}
+<div class="toolbar d-flex flex-wrap gap-2">
+    <a href="{% url 'exam_results' result.exam.id %}" class="btn btn-app btn-app-outline">
+        <i class="bi bi-arrow-left me-1"></i>{{ result.exam.title }}
+    </a>
+    <a href="{% url 'results_list' %}" class="btn btn-app btn-app-outline">
+        <i class="bi bi-journal-text me-1"></i>All Exams
+    </a>
+</div>
+
+<div class="page-header text-center">
+    <h1 class="page-title">{{ result.student.full_name }}</h1>
+    <p class="page-subtitle">{{ result.exam.title }} — {{ result.exam.course.code }} · {{ result.exam.exam_date }}</p>
+</div>
+
+<div class="stat-row">
+    <div class="stat-box text-center">
+        <div class="stat-label">Score</div>
+        <div class="stat-value">{{ result.score }}%</div>
+        <p class="text-muted small mb-0">{{ result.earned_points }} / {{ result.total_points }} pts</p>
+    </div>
+    <div class="stat-box text-center">
+        <div class="stat-label">Letter Grade</div>
+        {% with pct=result.score %}
+        <div class="stat-value">
+            {% if pct >= 90 %}A{% elif pct >= 80 %}B{% elif pct >= 70 %}C{% elif pct >= 60 %}D{% else %}F{% endif %}
+        </div>
+        <p class="text-muted small mb-0">
+            {% if pct >= 90 %}Excellent{% elif pct >= 80 %}Good{% elif pct >= 70 %}Satisfactory{% elif pct >= 60 %}Passing{% else %}Failed{% endif %}
+        </p>
+        {% endwith %}
+    </div>
+    <div class="stat-box">
+        <div class="d-flex flex-wrap gap-2">
+            <span class="badge badge-app badge-success">Correct: {{ result.correct_count }}</span>
+            <span class="badge badge-app badge-danger">Wrong: {{ result.wrong_count }}</span>
+            <span class="badge badge-app badge-muted">Blank: {{ result.blank_count }}</span>
+            <span class="badge badge-app badge-warning">Multiple: {{ result.multiple_mark_count }}</span>
+        </div>
+    </div>
+</div>
+
+{% if result.needs_review %}
+<div class="alert alert-warning alert-app">
+    <i class="bi bi-exclamation-triangle me-2"></i>
+    This result has been flagged for manual review. Some answers may need verification.
+</div>
+{% endif %}
+
+<div class="app-card mb-4">
+    <div class="app-card-header">Per-Question Breakdown</div>
+    <div class="table-responsive">
+        <table class="table table-app mb-0">
+            <thead>
+                <tr>
+                    <th>Q#</th>
+                    <th>Section</th>
+                    <th>Correct Answer</th>
+                    <th>Student Answer</th>
+                    <th>Points</th>
+                    <th>Earned</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ans in answers %}
+                <tr>
+                    <td><strong>{{ ans.question_number }}</strong></td>
+                    <td>
+                        {% if ans.section == 'Classical' or ans.question_type == 'classical' %}
+                        <span class="badge badge-app badge-warning">Classical Questions</span>
+                        {% else %}
+                        <span class="badge badge-app badge-primary">Marked Questions</span>
+                        {% endif %}
+                    </td>
+                    <td><span class="badge badge-app badge-primary">{{ ans.correct_answer }}</span></td>
+                    <td>
+                        {% if ans.detected and ans.detected != 'BLANK' %}
+                        <span class="badge badge-app {% if ans.needs_review %}badge-warning{% elif ans.is_correct %}badge-success{% elif ans.is_partial %}badge-warning{% else %}badge-danger{% endif %}">
+                            {{ ans.detected }}
+                        </span>
+                        {% else %}
+                        <span class="badge badge-app badge-muted">BLANK</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ ans.question_points }}</td>
+                    <td><strong>{{ ans.earned_points }}</strong></td>
+                    <td>
+                        {% if ans.exceeds_max %}
+                        <span class="badge badge-app badge-danger">Exceeds max ({{ ans.question_points }} pts)</span>
+                        {% elif ans.needs_review and ans.correct_answer == 'Not set' %}
+                        <span class="badge badge-app badge-warning">No answer key</span>
+                        {% elif ans.needs_review %}
+                        <span class="badge badge-app badge-warning">Review</span>
+                        {% elif ans.is_correct %}
+                        <span class="badge badge-app badge-success">Correct</span>
+                        {% elif ans.is_partial %}
+                        <span class="badge badge-app badge-warning">Partial</span>
+                        {% elif not ans.detected or ans.detected == 'BLANK' %}
+                        <span class="badge badge-app badge-muted">Blank</span>
+                        {% else %}
+                        <span class="badge badge-app badge-danger">Wrong</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="7" class="text-center py-4 text-muted">No answer data available</td></tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr class="table-light">
+                    <td colspan="4"><strong>Total</strong></td>
+                    <td><strong>{{ result.total_points }}</strong></td>
+                    <td><strong>{{ result.earned_points }}</strong></td>
+                    <td><strong>{{ result.score }}%</strong></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+
+{% with summaries=result.get_section_summaries %}
+<div class="row g-3 mb-4">
+    {% if summaries.mcq.question_count %}
+    <div class="col-md-{% if summaries.classical.question_count %}6{% else %}12{% endif %}">
+        <div class="app-card h-100">
+            <div class="app-card-header">Marked Questions — {{ summaries.mcq.question_count }} question{{ summaries.mcq.question_count|pluralize }}</div>
+            <div class="app-card-body">
+                <p class="mb-1">Correct: {{ summaries.mcq.correct }} / {{ summaries.mcq.question_count }}</p>
+                <p class="mb-2">Points: {{ summaries.mcq.earned_points|floatformat:0 }} / {{ summaries.mcq.total_points|floatformat:0 }}</p>
+                <div class="progress" style="height: 10px;">
+                    <div class="progress-bar bg-success" role="progressbar" style="width: {{ summaries.mcq.pct }}%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    {% if summaries.classical.question_count %}
+    <div class="col-md-{% if summaries.mcq.question_count %}6{% else %}12{% endif %}">
+        <div class="app-card h-100">
+            <div class="app-card-header">Classical Questions — {{ summaries.classical.question_count }} question{{ summaries.classical.question_count|pluralize }}</div>
+            <div class="app-card-body">
+                <p class="mb-2">Points earned: {{ summaries.classical.earned_points|floatformat:0 }} / {{ summaries.classical.total_points|floatformat:0 }}</p>
+                <div class="progress" style="height: 10px;">
+                    <div class="progress-bar bg-danger" role="progressbar" style="width: {{ summaries.classical.pct }}%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endwith %}
+
+{% if student_answers %}
+<div class="app-card mb-4">
+    <div class="app-card-header">Detailed Answer Records</div>
+    <div class="app-card-body">
+        {% for sa in student_answers %}
+        <div class="row mb-2 pb-2 border-bottom">
+            <div class="col-auto">
+                <span class="badge badge-app {% if sa.is_correct %}badge-success{% elif sa.is_blank %}badge-muted{% elif sa.is_multiple_mark %}badge-warning{% else %}badge-danger{% endif %} rounded-pill px-3 py-2">
+                    {{ sa.question.question_number }}
+                </span>
+            </div>
+            <div class="col">
+                <strong>Q{{ sa.question.question_number }}</strong>
+                <span class="badge badge-app {% if sa.question.is_classical %}badge-warning{% else %}badge-primary{% endif %} ms-2">
+                    {% if sa.question.is_classical %}Classical Questions{% else %}Marked Questions{% endif %}
+                </span>
+                <br>
+                <small class="text-muted">
+                    Correct: <strong>{{ sa.correct_answer }}</strong> |
+                    Student: <strong>{{ sa.detected_answer|default:"BLANK" }}</strong> |
+                    Points: {{ sa.question_points }} → <strong class="{% if sa.is_correct %}text-success{% elif sa.earned_points > 0 %}text-warning{% else %}text-danger{% endif %}">{{ sa.earned_points }}</strong>
+                    {% if sa.is_multiple_mark %}<span class="badge badge-app badge-warning ms-2">Multiple marks</span>{% endif %}
+                </small>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<div class="text-center d-flex flex-wrap justify-content-center gap-2">
+    <a href="{% url 'exam_results' result.exam.id %}" class="btn btn-app btn-app-outline px-4">
+        <i class="bi bi-arrow-left me-1"></i>Back to {{ result.exam.title }}
+    </a>
+    <a href="{% url 'results_list' %}" class="btn btn-app btn-app-outline px-4">
+        All Exams
+    </a>
+</div>
+{% endblock %}

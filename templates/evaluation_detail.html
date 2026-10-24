@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Result Detail - Optical Exam System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Poppins', sans-serif; }
+        body { 
+            background: linear-gradient(135deg, #ffeef8 0%, #fad0c4 50%, #ffd1ff 100%); 
+            min-height: 100vh; padding-top: 20px; background-attachment: fixed;
+        }
+        .navbar { 
+            margin-bottom: 30px; box-shadow: 0 8px 32px rgba(255, 105, 180, 0.15);
+            background: linear-gradient(135deg, #ff69b4 0%, #ff1493 100%) !important;
+        }
+        .card { 
+            border: none; border-radius: 20px;
+            box-shadow: 0 8px 24px rgba(255, 105, 180, 0.12);
+            background: rgba(255, 255, 255, 0.95);
+        }
+        .score-circle {
+            width: 150px; height: 150px; border-radius: 50%;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            color: white; font-weight: 800; font-size: 2.5rem; margin: 0 auto;
+        }
+        .score-circle small { font-size: 0.9rem; font-weight: 400; }
+        .score-excellent { background: linear-gradient(135deg, #4caf50 0%, #2e7d32 100%); }
+        .score-good { background: linear-gradient(135deg, #8bc34a 0%, #689f38 100%); }
+        .score-average { background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%); }
+        .score-poor { background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%); }
+        .btn { border-radius: 12px; font-weight: 500; transition: all 0.2s; border: none; }
+        .btn-pink { background: linear-gradient(135deg, #ff69b4 0%, #ff1493 100%); color: white; }
+        .correct { color: #4caf50; font-weight: 700; }
+        .wrong { color: #f44336; font-weight: 700; }
+        .blank { color: #9e9e9e; font-weight: 700; }
+        .stat-card { border-radius: 16px; padding: 1.5rem; text-align: center; color: white; }
+        .stat-number { font-size: 2rem; font-weight: 800; }
+        .stat-label { font-size: 0.85rem; opacity: 0.9; }
+        .answer-row { border-bottom: 1px solid #ffe4f0; padding: 12px 0; }
+        .answer-row:last-child { border-bottom: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav class="navbar navbar-expand-lg navbar-dark rounded">
+            <div class="container-fluid">
+                <a class="navbar-brand fw-bold" href="{% url 'index' %}">🎓 Optical Exam System</a>
+                <div class="navbar-nav">
+                    <a class="nav-link" href="{% url 'student_list' %}">Students</a>
+                    <a class="nav-link" href="{% url 'course_list' %}">Courses</a>
+                    <a class="nav-link" href="{% url 'exam_list' %}">Exams</a>
+                    <a class="nav-link" href="{% url 'upload_scanned_paper' %}">Upload</a>
+                    <a class="nav-link" href="{% url 'results_list' %}">Results</a>
+                </div>
+            </div>
+        </nav>
+        <div class="container mt-4">
+            <a href="{% url 'results_list' %}" class="btn btn-secondary mb-4">🔙 Back to Results</a>
+            <div class="card">
+                <div class="card-body text-center py-4">
+                    <h1>{{ result.student.full_name }} - {{ result.exam.title }}</h1>
+                    <p>Score: {{ result.score }}/100 | {{ result.correct_count }} ✅ {{ result.wrong_count }} ❌ {{ result.blank_count }} ⬜</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

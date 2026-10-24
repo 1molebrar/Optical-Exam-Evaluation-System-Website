@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exam Paper - {{ exam.title }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Poppins', sans-serif; }
+        @media print {
+            .no-print { display: none !important; }
+            body { padding: 0; }
+            .exam-sheet { border: none; max-width: 100%; margin: 0; }
+        }
+        body { background: #f5f5f5; }
+        .exam-sheet {
+            max-width: 800px; margin: 20px auto; background: white;
+            padding: 30px; border: 2px solid #000; position: relative;
+        }
+        .header-section { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+        .logo-box { flex: 1; }
+        .center-title { flex: 2; text-align: center; font-size: 14px; font-weight: 500; }
+        .barcode-box { 
+            border: 2px solid #000; border-radius: 8px; padding: 10px; 
+            display: flex; align-items: center; justify-content: space-between;
+            width: 200px; font-size: 10px;
+        }
+        .barcode-box img { max-height: 40px; }
+        .course-info { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 20px; }
+        .info-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        .info-table th, .info-table td { border: 1px solid #000; padding: 8px; font-size: 12px; }
+        .bubble-grid-container { display: flex; justify-content: center; margin-bottom: 20px; }
+        .bubble-grid { display: flex; gap: 5px; }
+        .bubble-col { display: flex; flex-direction: column; gap: 2px; }
+        .bubble {
+            width: 16px; height: 16px; border: 1px solid #000; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; font-size: 8px;
+        }
+        .score-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; text-align: center; font-size: 10px; }
+        .score-table th, .score-table td { border: 1px solid #000; padding: 4px; }
+        .footer-rules { font-size: 10px; margin-top: 20px; }
+        .footer-rules ul { padding-left: 20px; }
+    </style>
+</head>
+<body>
+    <div class="no-print text-center mb-3" style="padding: 20px;">
+        <a href="{% url 'view_exam_paper' exam_paper.id %}" target="_blank" class="btn btn-primary me-2">Download PDF Paper</a>
+        <a href="{% url 'exam_manage' exam.id %}" class="btn btn-secondary me-2">Manage Exam</a>
+        <a href="{% url 'exam_list' %}" class="btn btn-outline-secondary">All Exams</a>
+    </div>
+
+    <div class="exam-sheet">
+        <div class="header-section">
+            <div class="logo-box">
+                <h2><b>İSTANBUL</b><br><b>TOPKAPI</b><br><span style="font-size: 18px; font-weight: normal;">ÜNİVERSİTESİ</span></h2>
+            </div>
+            <div class="center-title">
+                SORU FORMU (2025-2026 Lisans ve Ön Lisans AKademik<br>Yıl Bahar Dönemi DÖNEMİ)
+            </div>
+            <div class="barcode-box">
+                <div>[BARCODE HERE]</div>
+                <div>
+                    {% if exam_paper.qr_image %}
+                    <img src="{{ exam_paper.qr_image.url }}" alt="QR Code">
+                    {% endif %}
+                    <br>Event ID: {{ exam.id }}
+                </div>
+            </div>
+        </div>
+
+        <div class="course-info">
+            <div>{{ exam.course.code }} - {{ exam.course.name }} - Final Sınavı : {{ exam.title }}</div>
+            <div>Tarih: {{ exam.exam_date|date:"d/m/Y" }}</div>
+        </div>
+
+        <table class="info-table">
+            <tr>
+                <th style="width: 40%">Öğrencinin Adı – Soyadı</th>
+                <th style="width: 20%">Öğrenci No</th>
+                <th style="width: 25%">Programı/Bölümü</th>
+                <th style="width: 15%">İmza</th>
+            </tr>
+            <tr>
+                <td style="height: 40px;"></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+        </table>
+
+        <div class="text-center" style="font-size: 10px; font-weight: bold; margin-bottom: 5px;">STUDENT ID BUBBLE SHEET</div>
+        <div class="bubble-grid-container">
+            <div class="bubble-grid">
+                <!-- 10 columns -->
+                {% for i in "1234567890" %}
+                <div class="bubble-col">
+                    {% for j in "0123456789" %}
+                    <div class="bubble">{{ j }}</div>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <table class="score-table">
+            <tr>
+                <th rowspan="2">Score Sheet</th>
+                <th colspan="2">Q1 / 25pts</th>
+                <th colspan="3">Q2 / 30pts</th>
+                <th colspan="1">Q3 / 10pts</th>
+                <th colspan="3">Q4 / 35pts</th>
+                <th rowspan="2">Total 100 pts</th>
+            </tr>
+            <tr>
+                <th>İçerik kapsamı /...</th>
+                <th>Sunum / 10pts</th>
+                <th>Projede ele alın...</th>
+                <th>Önerilen çözüm...</th>
+                <th>Projede nelerin...</th>
+                <th></th>
+                <th>Backend yapısı...</th>
+                <th>API'ler / 10pts</th>
+                <th>Frontend yapısı...</th>
+            </tr>
+            <tr>
+                <td style="height: 30px; font-weight: bold;">Score</td>
+                <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+            </tr>
+        </table>
+
+        <div class="footer-rules">
+            <p>Değerlendiren: Dr. Öğr. Üyesi SAJJAD NEMATZADEH MİANDOAB , İmza</p>
+            <ul>
+                <li>Soru kâğıdı üzerine gerekli bilgileri yazmadığınızda.</li>
+                <li>Yoklama listesinde imzanızın olmaması durumunda, Optik form kullanılıyorsa üzerine ad-soyadı, program yazılmadığında, <b>SINAVINIZ GEÇERSİZ SAYILACAKTIR.</b></li>
+                <li>Her öğrenci belirlenen sınav salonunda sınava girmelidir.</li>
+                <li>Yoklama listesine gözetmenin bilgisi dışında ekleme yapılarak imza atılmamalıdır.</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

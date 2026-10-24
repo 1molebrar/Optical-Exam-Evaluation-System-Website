@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+
+{% block title %}Upload Scanned Paper — Optical Exam System{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Upload Scanned Answer Sheet</h1>
+    <p class="page-subtitle">Upload the filled optical answer sheet — QR code and bubbles will be detected automatically.</p>
+</div>
+
+{% if success %}
+<div class="alert alert-success alert-app d-flex align-items-center flex-wrap gap-2">
+    {{ success }}
+    {% if scanned_id %}
+    <a href="{% url 'scan_history' %}" class="btn btn-app btn-app-success btn-sm">View Scan History</a>
+    {% endif %}
+</div>
+{% endif %}
+
+{% if error %}
+<div class="alert alert-danger alert-app">{{ error }}</div>
+{% endif %}
+
+<div class="stat-row">
+    <div class="stat-box">
+        <div class="stat-label">Step 1</div>
+        <div class="stat-value" style="font-size: 1rem;">Generate Paper</div>
+        <p class="text-muted small mb-0 mt-1">Create exam papers with QR codes for students</p>
+    </div>
+    <div class="stat-box">
+        <div class="stat-label">Step 2</div>
+        <div class="stat-value" style="font-size: 1rem;">Fill &amp; Scan</div>
+        <p class="text-muted small mb-0 mt-1">Student fills the answer sheet and you take a photo</p>
+    </div>
+    <div class="stat-box">
+        <div class="stat-label">Step 3</div>
+        <div class="stat-value" style="font-size: 1rem;">Upload &amp; Grade</div>
+        <p class="text-muted small mb-0 mt-1">System reads QR code, detects bubbles, and grades automatically</p>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="app-card">
+            <div class="app-card-header">Upload Scanned Answer Sheet</div>
+            <div class="app-card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="mb-4">
+                        <label for="image" class="form-label">Scanned Image</label>
+                        <div class="border border-2 border-dashed rounded p-5 text-center mb-2 bg-light" style="cursor: pointer;" onclick="document.getElementById('image').click()">
+                            <i class="bi bi-camera display-4 text-muted d-block mb-2"></i>
+                            <p class="mb-0 fw-medium">Click to select image</p>
+                            <p class="mb-0 text-muted small">JPG, PNG, GIF, BMP, WebP (max 10MB)</p>
+                        </div>
+                        <input type="file" class="form-control mt-2" id="image" name="image" accept="image/*" required onchange="previewImage(this)">
+                        <div id="image-preview" class="mt-3 text-center" style="display:none;">
+                            <img id="preview" class="img-fluid rounded border" style="max-height: 300px;" alt="Preview">
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2 justify-content-center">
+                        <button type="submit" class="btn btn-app btn-app-primary px-4">
+                            <i class="bi bi-upload me-1"></i>Upload &amp; Process
+                        </button>
+                        <a href="{% url 'index' %}" class="btn btn-app btn-app-outline px-4">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function previewImage(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('preview').src = e.target.result;
+                document.getElementById('image-preview').style.display = 'block';
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+</script>
+{% endblock %}

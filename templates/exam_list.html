@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block title %}Exams — Optical Exam System{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex flex-wrap justify-content-between align-items-start gap-3">
+    <div>
+        <h1 class="page-title">Exams</h1>
+        <p class="page-subtitle">Create exams, manage materials, and track results.</p>
+    </div>
+    <div class="toolbar mb-0">
+        <a href="{% url 'exam_create' %}" class="btn btn-app btn-app-primary">
+            <i class="bi bi-plus-lg me-1"></i>New Exam
+        </a>
+        <a href="{% url 'index' %}" class="btn btn-app btn-app-outline">
+            <i class="bi bi-house me-1"></i>Dashboard
+        </a>
+    </div>
+</div>
+
+{% if exam_rows %}
+<div class="app-card">
+    <div class="table-responsive">
+        <table class="table table-app">
+            <thead>
+                <tr>
+                    <th>Exam</th>
+                    <th>Course</th>
+                    <th>Date</th>
+                    <th>Duration</th>
+                    <th>Questions</th>
+                    <th>Enrolled</th>
+                    <th>Results</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in exam_rows %}
+                <tr>
+                    <td><strong>{{ row.exam.title }}</strong></td>
+                    <td><span class="badge badge-app badge-primary">{{ row.exam.course.code }}</span></td>
+                    <td>{{ row.exam.exam_date|date:"M j, Y" }}</td>
+                    <td>{{ row.exam.duration_minutes }} min</td>
+                    <td>{{ row.exam.questions.count }}</td>
+                    <td>{{ row.enrolled_count }}</td>
+                    <td>{{ row.result_count }}</td>
+                    <td class="text-end">
+                        <a href="{% url 'exam_manage' row.exam.id %}" class="btn btn-app btn-app-primary btn-sm">
+                            Manage <i class="bi bi-arrow-right ms-1"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="app-card">
+    <div class="empty-state">
+        <i class="bi bi-journal-text display-4 text-muted mb-3 d-block"></i>
+        <h4>No exams yet</h4>
+        <p>Create your first exam to start generating papers and grading scans.</p>
+        <a href="{% url 'exam_create' %}" class="btn btn-app btn-app-primary mt-2">Create Exam</a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

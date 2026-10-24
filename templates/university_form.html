@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block title %}Add University — Optical Exam System{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Add University</h1>
+    <p class="page-subtitle">Register a new university to associate with courses.</p>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="app-card">
+            <div class="app-card-header">New University</div>
+            <div class="app-card-body">
+                {% if error %}
+                <div class="alert alert-danger alert-app">{{ error }}</div>
+                {% endif %}
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="name" class="form-label">University Name</label>
+                        <input type="text" class="form-control" id="name" name="name" required placeholder="e.g., Topkapi University">
+                    </div>
+                    <div class="mb-3">
+                        <label for="logo" class="form-label">University Logo</label>
+                        <input type="file" class="form-control" id="logo" name="logo" accept="image/*">
+                        <div class="form-text">Upload a high-quality logo. It will be resized automatically for exam headers.</div>
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-app btn-app-primary">Save University</button>
+                        <a href="{% url 'university_list' %}" class="btn btn-app btn-app-outline">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

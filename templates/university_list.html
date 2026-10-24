@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block title %}Universities — Optical Exam System{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex flex-wrap justify-content-between align-items-start gap-3">
+    <div>
+        <h1 class="page-title">Universities</h1>
+        <p class="page-subtitle">Manage universities and their logos.</p>
+    </div>
+    <div class="toolbar mb-0">
+        <a href="{% url 'university_create' %}" class="btn btn-app btn-app-primary">
+            <i class="bi bi-plus-lg me-1"></i>Add University
+        </a>
+        <a href="{% url 'index' %}" class="btn btn-app btn-app-outline">
+            <i class="bi bi-house me-1"></i>Dashboard
+        </a>
+    </div>
+</div>
+
+{% if universities %}
+<div class="app-card">
+    <div class="table-responsive">
+        <table class="table table-app align-middle">
+            <thead>
+                <tr>
+                    <th>Logo</th>
+                    <th>University Name</th>
+                    <th>Created At</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for uni in universities %}
+                <tr>
+                    <td>
+                        {% if uni.logo %}
+                            <img src="{{ uni.logo.url }}" alt="{{ uni.name }}" style="max-height: 40px; border-radius: 4px;">
+                        {% else %}
+                            <span class="text-muted small">No Logo</span>
+                        {% endif %}
+                    </td>
+                    <td><strong>{{ uni.name }}</strong></td>
+                    <td>{{ uni.created_at|date:"Y-m-d" }}</td>
+                    <td class="text-end">
+                        {% if user_role in 'admin,instructor' %}
+                        <a href="{% url 'university_delete' uni.id %}" class="btn btn-app btn-app-danger btn-sm"
+                           onclick="return confirm('Are you sure you want to delete this university? All associated courses will also be deleted.')">
+                            <i class="bi bi-trash me-1"></i>Delete
+                        </a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="app-card">
+    <div class="empty-state">
+        <i class="bi bi-building display-4 text-muted mb-3 d-block"></i>
+        <h4>No universities found</h4>
+        <p>Add a university to associate with your courses and exams.</p>
+        <a href="{% url 'university_create' %}" class="btn btn-app btn-app-primary mt-2">Add University</a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

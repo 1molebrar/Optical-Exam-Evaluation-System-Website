@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ exam.title }} — Results{% endblock %}
+
+{% block content %}
+<div class="toolbar d-flex flex-wrap justify-content-between align-items-center gap-2">
+    <a href="{% url 'results_list' %}" class="btn btn-app btn-app-outline">
+        <i class="bi bi-arrow-left me-1"></i>All Exams
+    </a>
+    <div class="d-flex flex-wrap gap-2">
+        <a href="{% url 'export_results_csv' exam.id %}" class="btn btn-app btn-app-outline btn-sm">
+            <i class="bi bi-download me-1"></i>Export CSV
+        </a>
+        <a href="{% url 'export_results_json' exam.id %}" class="btn btn-app btn-app-outline btn-sm">
+            <i class="bi bi-braces me-1"></i>Export JSON
+        </a>
+        <a href="{% url 'exam_manage' exam.id %}" class="btn btn-app btn-app-secondary btn-sm">
+            <i class="bi bi-gear me-1"></i>Exam Hub
+        </a>
+    </div>
+</div>
+
+<div class="page-header">
+    <h1 class="page-title">{{ exam.title }}</h1>
+    <p class="page-subtitle">
+        {{ exam.course.code }} — {{ exam.course.name }} · {{ exam.exam_date|date:"M j, Y" }}
+        · {{ exam.duration_minutes }} min
+    </p>
+</div>
+
+<div class="stat-row mb-4">
+    <div class="stat-box text-center">
+        <div class="stat-label">Graded</div>
+        <div class="stat-value">{{ results|length }}</div>
+        <p class="text-muted small mb-0">of {{ enrolled_count }} enrolled</p>
+    </div>
+    <div class="stat-box text-center">
+        <div class="stat-label">Questions</div>
+        <div class="stat-value">{{ exam.questions.count }}</div>
+        <p class="text-muted small mb-0">OMR + classical</p>
+    </div>
+</div>
+
+{% if results %}
+<div class="app-card">
+    <div class="app-card-header d-flex justify-content-between align-items-center">
+        <span>Student Results</span>
+        <span class="badge badge-app badge-muted">Sorted by name</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-app mb-0">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Student ID</th>
+                    <th>Student</th>
+                    <th>Points</th>
+                    <th>Correct</th>
+                    <th>Wrong</th>
+                    <th>Blank</th>
+                    <th>Score</th>
+                    <th>Status</th>
+                    <th>Graded</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for result in results %}
+                <tr>
+                    <td class="text-muted">{{ forloop.counter }}</td>
+                    <td><code>{{ result.student.student_id }}</code></td>
+                    <td><strong>{{ result.student.full_name }}</strong></td>
+                    <td><strong>{{ result.earned_points }}</strong> / {{ result.total_points }}</td>
+                    <td><span class="badge badge-app badge-success">{{ result.correct_count }}</span></td>
+                    <td><span class="badge badge-app badge-danger">{{ result.wrong_count }}</span></td>
+                    <td><span class="badge badge-app badge-muted">{{ result.blank_count }}</span></td>
+                    <td>
+                        <span class="badge badge-app {% if result.score >= 80 %}badge-success{% elif result.score >= 60 %}badge-primary{% elif result.score >= 40 %}badge-warning{% else %}badge-danger{% endif %}">
+                            {{ result.score }}%
+                        </span>
+                    </td>
+                    <td>
+                        {% if result.needs_review %}
+                        <span class="badge badge-app badge-warning">Review</span>
+                        {% else %}
+                        <span class="badge badge-app badge-success">Done</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ result.created_at|date:"Y-m-d H:i" }}</td>
+                    <td class="text-end text-nowrap">
+                        <a href="{% url 'result_detail' result_id=result.id %}" class="btn btn-app btn-app-primary btn-sm">
+                            <i class="bi bi-eye me-1"></i>Details
+                        </a>
+                        <a href="{% url 'result_delete' result_id=result.id %}" class="btn btn-app btn-app-danger btn-sm"
+                           onclick="return confirm('Delete this result?')">
+                            <i class="bi bi-trash"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="app-card">
+    <div class="empty-state">
+        <i class="bi bi-inbox display-4 text-muted mb-3 d-block"></i>
+        <h4>No Results for This Exam Yet</h4>
+        <p>Upload a completed answer sheet — the QR code on the paper identifies this exam automatically.</p>
+        <a href="{% url 'upload_scanned_paper' %}" class="btn btn-app btn-app-primary mt-2">
+            <i class="bi bi-upload me-1"></i>Upload Answer Sheet
+        </a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

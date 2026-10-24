@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block title %}Exam Enrollment{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Exam Enrollment</h1>
+    <p class="page-subtitle">Enroll a student for a specific exam before uploading their answer sheet.</p>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="app-card">
+            <div class="app-card-header">Enroll Student to Exam</div>
+            <div class="app-card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="student_id" class="form-label">Student</label>
+                        <select class="form-select" id="student_id" name="student_id" required>
+                            <option value="">Select student</option>
+                            {% for student in students %}
+                            <option value="{{ student.id }}">{{ student.student_id }} — {{ student.full_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="exam_id" class="form-label">Exam</label>
+                        <select class="form-select" id="exam_id" name="exam_id" required>
+                            <option value="">Select exam</option>
+                            {% for exam in exams %}
+                            <option value="{{ exam.id }}" {% if exam.id == preselected_exam_id %}selected{% endif %}>
+                                {{ exam.title }} ({{ exam.course.code }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-app btn-app-primary">Enroll Student</button>
+                        <a href="{% url 'exam_list' %}" class="btn btn-app btn-app-outline">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

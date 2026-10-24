@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block title %}Pending Reviews — Optical Exam System{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex flex-wrap justify-content-between align-items-start gap-3">
+    <div>
+        <h1 class="page-title">Pending Manual Reviews</h1>
+        <p class="page-subtitle">Scan results that need human verification.</p>
+    </div>
+    <div class="toolbar mb-0">
+        <a href="{% url 'scan_history' %}" class="btn btn-app btn-app-outline">
+            <i class="bi bi-clock-history me-1"></i>Scan History
+        </a>
+    </div>
+</div>
+
+{% if pending %}
+<div class="app-card">
+    <div class="app-card-header d-flex justify-content-between align-items-center">
+        <span>Items Requiring Review</span>
+        <span class="badge badge-app badge-warning">{{ pending|length }} items</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-app mb-0">
+            <thead>
+                <tr>
+                    <th>Image</th>
+                    <th>QR Status</th>
+                    <th>OCR ID</th>
+                    <th>Exam</th>
+                    <th>Score Preview</th>
+                    <th>OMR Conf.</th>
+                    <th>Uploaded</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in pending %}
+                <tr class="border-start border-warning border-4">
+                    <td>
+                        {% if s.image %}
+                        <img src="{{ s.image.url }}" class="rounded border" style="max-width: 60px; max-height: 60px;" alt="scan">
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if s.qr_success %}
+                        <span class="badge badge-app badge-success">OK</span>
+                        {% else %}
+                        <span class="badge badge-app badge-danger">Failed</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ s.ocr_student_id|default:"—" }}</td>
+                    <td>{{ s.matched_exam.title|default:"—" }}</td>
+                    <td>
+                        {% if s.score_preview %}
+                        <strong>{{ s.score_preview.earned_points }}/{{ s.score_preview.total_points }}</strong>
+                        <small class="text-muted">({{ s.score_preview.score }}%)</small>
+                        {% else %}
+                        —
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="badge badge-app {% if s.omr_confidence >= 60 %}badge-warning{% else %}badge-danger{% endif %}" title="Bubble detection confidence">
+                            {{ s.omr_confidence }}%
+                        </span>
+                    </td>
+                    <td>{{ s.uploaded_at|date:"Y-m-d H:i" }}</td>
+                    <td class="text-end">
+                        <a href="{% url 'review_scanned' s.id %}" class="btn btn-app btn-app-success btn-sm">
+                            <i class="bi bi-check-lg me-1"></i>Review
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="app-card">
+    <div class="empty-state">
+        <i class="bi bi-check-circle display-4 text-muted mb-3 d-block"></i>
+        <h4>All Clear</h4>
+        <p>No items require manual review.</p>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

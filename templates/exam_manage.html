@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ exam.title }} — Manage Exam{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <nav aria-label="breadcrumb" class="mb-2">
+        <ol class="breadcrumb mb-0" style="font-size: 0.85rem;">
+            <li class="breadcrumb-item"><a href="{% url 'exam_list' %}">Exams</a></li>
+            <li class="breadcrumb-item active">{{ exam.title }}</li>
+        </ol>
+    </nav>
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+        <div>
+            <h1 class="page-title">{{ exam.title }}</h1>
+            <p class="page-subtitle">
+                {{ exam.course.code }} · {{ exam.course.name }} · {{ exam.exam_date|date:"M j, Y" }} · {{ exam.duration_minutes }} min
+            </p>
+        </div>
+        <a href="{% url 'exam_list' %}" class="btn btn-app btn-app-outline">
+            <i class="bi bi-arrow-left me-1"></i>All Exams
+        </a>
+    </div>
+</div>
+
+<div class="stat-row">
+    <div class="stat-box">
+        <div class="stat-label">Questions</div>
+        <div class="stat-value">{{ question_count }}</div>
+    </div>
+    <div class="stat-box">
+        <div class="stat-label">Course Enrolled</div>
+        <div class="stat-value">{{ course_enrolled.count }}</div>
+    </div>
+    <div class="stat-box">
+        <div class="stat-label">Graded Results</div>
+        <div class="stat-value">{{ result_count }}</div>
+    </div>
+    <div class="stat-box">
+        <div class="stat-label">Answer Sheet</div>
+        <div class="stat-value" style="font-size: 1rem;">
+            {% if paper %}<span class="badge badge-app badge-success">Ready</span>{% else %}
+            <span class="badge badge-app badge-muted">Not generated</span>{% endif %}
+        </div>
+    </div>
+</div>
+
+{% if not answer_key_configured %}
+<div class="alert alert-warning alert-app mb-4">
+    <i class="bi bi-exclamation-triangle me-2"></i>
+    <strong>Answer key not set.</strong> OMR questions need correct answers (A–E) before scans can be graded.
+    <a href="{% url 'configure_exam' exam.id %}" class="alert-link ms-1">Configure answer key</a>
+    or upload a filled answer-key sheet.
+</div>
+{% endif %}
+
+<h2 class="h5 fw-semibold mb-3">Exam Actions</h2>
+<p class="text-muted small mb-3">Each task is separate — pick the action you need below.</p>
+
+<div class="action-grid mb-4">
+    <a href="{% url 'enroll_student' %}?course_id={{ exam.course.id }}" class="action-card">
+        <div class="action-card-icon icon-blue"><i class="bi bi-person-plus"></i></div>
+        <div class="action-card-title">Course Enrollment</div>
+        <p class="action-card-desc">Enroll students in {{ exam.course.code }}. Enrolled students can take all exams for this course.</p>
+        <div class="action-card-arrow">Enroll in course <i class="bi bi-chevron-right"></i></div>
+    </a>
+
+    <a href="{% url 'configure_exam' exam.id %}" class="action-card">
+        <div class="action-card-icon icon-purple"><i class="bi bi-sliders"></i></div>
+        <div class="action-card-title">Configure Exam</div>
+        <p class="action-card-desc">Set question types, points, and correct answers for OMR and classical sections.</p>
+        <div class="action-card-arrow">Configure <i class="bi bi-chevron-right"></i></div>
+    </a>
+
+    <a href="{% url 'generate_exam_papers' exam.id %}" class="action-card">
+        <div class="action-card-icon icon-green"><i class="bi bi-file-earmark-image"></i></div>
+        <div class="action-card-title">Generate Answer Sheet</div>
+        <p class="action-card-desc">Create the printable PNG answer sheet with QR code for this exam.</p>
+        <div class="action-card-arrow">Generate paper <i class="bi bi-chevron-right"></i></div>
+    </a>
+
+    <a href="{% url 'upload_answer_key' exam.id %}" class="action-card">
+        <div class="action-card-icon icon-amber"><i class="bi bi-key"></i></div>
+        <div class="action-card-title">Upload Answer Key</div>
+        <p class="action-card-desc">Scan and upload a filled answer key sheet to set bubble marks automatically.</p>
+        <div class="action-card-arrow">Upload key <i class="bi bi-chevron-right"></i></div>
+    </a>
+
+    <a href="{% url 'upload_scanned_paper' %}" class="action-card">
+        <div class="action-card-icon icon-slate"><i class="bi bi-upload"></i></div>
+        <div class="action-card-title">Upload Student Sheets</div>
+        <p class="action-card-desc">Upload scanned student answer sheets for OCR, OMR, and automatic grading.</p>
+        <div class="action-card-arrow">Go to upload <i class="bi bi-chevron-right"></i></div>
+    </a>
+
+    <a href="{% url 'export_results_csv' exam.id %}" class="action-card">
+        <div class="action-card-icon icon-slate"><i class="bi bi-filetype-csv"></i></div>
+        <div class="action-card-title">Export CSV</div>
+        <p class="action-card-desc">Download summary and per-question results as a spreadsheet-compatible CSV file.</p>
+        <div class="action-card-arrow">Download CSV <i class="bi bi-chevron-right"></i></div>
+    </a>
+
+    <a href="{% url 'export_results_json' exam.id %}" class="action-card">
+        <div class="action-card-icon icon-slate"><i class="bi bi-braces"></i></div>
+        <div class="action-card-title">Export JSON</div>
+        <p class="action-card-desc">Download exam results summary as structured JSON.</p>
+        <div class="action-card-arrow">Download JSON <i class="bi bi-chevron-right"></i></div>
+    </a>
+
+    <a href="{% url 'exam_results' exam.id %}" class="action-card">
+        <div class="action-card-icon icon-blue"><i class="bi bi-bar-chart"></i></div>
+        <div class="action-card-title">View Results</div>
+        <p class="action-card-desc">Browse graded results for all students who completed this exam.</p>
+        <div class="action-card-arrow">View results <i class="bi bi-chevron-right"></i></div>
+    </a>
+
+    {% if user_role == 'admin' %}
+    <a href="{% url 'exam_delete' exam.id %}" class="action-card"
+       onclick="return confirm('Delete this exam and all related data? This cannot be undone.');">
+        <div class="action-card-icon icon-red"><i class="bi bi-trash"></i></div>
+        <div class="action-card-title">Delete Exam</div>
+        <p class="action-card-desc">Permanently remove this exam, papers, scans, and results.</p>
+        <div class="action-card-arrow text-danger">Delete <i class="bi bi-chevron-right"></i></div>
+    </a>
+    {% endif %}
+</div>
+
+{% if course_enrolled %}
+<div class="app-card">
+    <div class="app-card-header">Students Enrolled in {{ exam.course.code }}</div>
+    <div class="app-card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-app mb-0">
+                <thead>
+                    <tr>
+                        <th>Student ID</th>
+                        <th>Name</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for enrollment in course_enrolled %}
+                    <tr>
+                        <td><code>{{ enrollment.student.student_id }}</code></td>
+                        <td>{{ enrollment.student.full_name }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="alert alert-warning alert-app">
+    <i class="bi bi-exclamation-triangle me-2"></i>
+    No students enrolled in {{ exam.course.code }} yet.
+    <a href="{% url 'enroll_student' %}?course_id={{ exam.course.id }}">Enroll students in the course</a>
+    before uploading answer sheets.
+</div>
+{% endif %}
+{% endblock %}

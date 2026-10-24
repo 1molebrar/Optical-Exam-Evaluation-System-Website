@@ -1,0 +1,185 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Exam — Optical Exam System{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex flex-wrap justify-content-between align-items-start gap-3">
+    <div>
+        <h1 class="page-title">Create Exam</h1>
+        <p class="page-subtitle">Define exam details, question distribution, and per-question points.</p>
+    </div>
+    <div class="toolbar mb-0">
+        <a href="{% url 'exam_list' %}" class="btn btn-app btn-app-outline">
+            <i class="bi bi-arrow-left me-1"></i>All Exams
+        </a>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="app-card">
+            <div class="app-card-body">
+                <form method="post">
+                    {% csrf_token %}
+
+                    {% if error %}
+                    <div class="alert alert-danger alert-app">{{ error }}</div>
+                    {% endif %}
+
+                    <h2 class="h6 fw-semibold mb-3">Exam Information</h2>
+                    <div class="row mb-4">
+                        <div class="col-md-6 mb-3">
+                            <label for="title" class="form-label">Exam Title</label>
+                            <input type="text" class="form-control" id="title" name="title" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="university_id" class="form-label">University</label>
+                            <select class="form-select" id="university_id" name="university_id" required onchange="filterCourses()">
+                                <option value="">— Select University —</option>
+                                {% for uni in universities %}
+                                <option value="{{ uni.id }}">{{ uni.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="course_id" class="form-label">Course</label>
+                            <select class="form-select" id="course_id" name="course_id" required disabled>
+                                <option value="">— Select Course —</option>
+                                {% for course in courses %}
+                                <option value="{{ course.id }}" data-uni="{{ course.university_id|default_if_none:'' }}">{{ course.code }} — {{ course.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="exam_date" class="form-label">Exam Date</label>
+                            <input type="date" class="form-control" id="exam_date" name="exam_date" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="duration_minutes" class="form-label">Duration (minutes)</label>
+                            <input type="number" class="form-control" id="duration_minutes" name="duration_minutes" value="60" min="5" max="300" required>
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <label for="rules" class="form-label">Exam Rules (Optional)</label>
+                            <textarea class="form-control" id="rules" name="rules" rows="4" placeholder="Enter any rules or instructions to be printed on the exam paper..."></textarea>
+                        </div>
+                    </div>
+
+                    <hr class="text-muted">
+
+                    <h2 class="h6 fw-semibold mb-3">Question Distribution</h2>
+                    <p class="text-muted small">Set how many optical (OMR) and classical (score-box) questions this exam has. Total questions = optical + classical.</p>
+                    <div class="row mb-3">
+                        <div class="col-md-4 mb-3">
+                            <label for="omr_count" class="form-label">Optical Questions (OMR)</label>
+                            <input type="number" class="form-control" id="omr_count" name="omr_count" value="5" min="0" max="50" onchange="renderPointFields()">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="classical_count" class="form-label">Classical Questions (Score boxes)</label>
+                            <input type="number" class="form-control" id="classical_count" name="classical_count" value="5" min="0" max="50" onchange="renderPointFields()">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Total Questions</label>
+                            <input type="text" class="form-control" id="total_display" value="10" readonly>
+                        </div>
+                    </div>
+
+                    <div id="omr-points-section" class="mb-3"></div>
+                    <div id="classical-points-section" class="mb-3"></div>
+
+                    <div class="d-flex gap-2 justify-content-center pt-2">
+                        <button type="submit" class="btn btn-app btn-app-primary px-4">Create Exam</button>
+                        <a href="{% url 'exam_list' %}" class="btn btn-app btn-app-outline px-4">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function filterCourses() {
+        const uniId = document.getElementById('university_id').value;
+        const courseSelect = document.getElementById('course_id');
+        const options = courseSelect.querySelectorAll('option');
+        
+        courseSelect.value = '';
+        if (!uniId) {
+            courseSelect.disabled = true;
+            return;
+        }
+        courseSelect.disabled = false;
+        
+        options.forEach(opt => {
+            if (opt.value === '') return;
+            if (opt.dataset.uni === uniId) {
+                opt.style.display = '';
+            } else {
+                opt.style.display = 'none';
+            }
+        });
+    }
+
+    function renderPointFields() {
+        const omrCount = Math.max(0, parseInt(document.getElementById('omr_count').value) || 0);
+        const classicalCount = Math.max(0, parseInt(document.getElementById('classical_count').value) || 0);
+        document.getElementById('total_display').value = omrCount + classicalCount;
+
+        const omrSection = document.getElementById('omr-points-section');
+        const classicalSection = document.getElementById('classical-points-section');
+        omrSection.innerHTML = '';
+        classicalSection.innerHTML = '';
+
+        if (omrCount > 0) {
+            omrSection.innerHTML = '<h3 class="h6 fw-semibold text-primary mb-2">Optical question points</h3>';
+            for (let i = 1; i <= omrCount; i++) {
+                omrSection.innerHTML += `
+                    <div class="app-card mb-2 border-start border-primary border-4">
+                        <div class="app-card-body py-2">
+                            <div class="row align-items-center">
+                                <div class="col-md-3"><strong>Q${i}</strong> <span class="badge badge-app badge-primary">OMR</span></div>
+                                <div class="col-md-3">
+                                    <label class="form-label small">Correct answer</label>
+                                    <select class="form-select" name="omr_correct_${i}">
+                                        <option value="">—</option>
+                                        <option value="A">A</option>
+                                        <option value="B">B</option>
+                                        <option value="C">C</option>
+                                        <option value="D">D</option>
+                                        <option value="E">E</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small">Points</label>
+                                    <input type="number" class="form-control" name="omr_points_${i}" value="10" min="0.5" step="0.5">
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+            }
+        }
+
+        if (classicalCount > 0) {
+            classicalSection.innerHTML = '<h3 class="h6 fw-semibold text-danger mb-2">Classical question max points</h3>';
+            for (let j = 1; j <= classicalCount; j++) {
+                const qnum = omrCount + j;
+                classicalSection.innerHTML += `
+                    <div class="app-card mb-2 border-start border-danger border-4">
+                        <div class="app-card-body py-2">
+                            <div class="row align-items-center">
+                                <div class="col-md-3"><strong>Q${qnum}</strong> <span class="badge badge-app badge-warning">Classical</span></div>
+                                <div class="col-md-4">
+                                    <label class="form-label small">Max points</label>
+                                    <input type="number" class="form-control" name="classical_points_${qnum}" value="10" min="0.5" step="0.5">
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+            }
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', renderPointFields);
+</script>
+{% endblock %}

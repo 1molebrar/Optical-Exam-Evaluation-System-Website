@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard — Optical Exam System{% endblock %}
+
+{% block extra_css %}
+<style>
+    body { background: linear-gradient(160deg, #eef2ff 0%, #f8fafc 45%, #f0fdf4 100%); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header text-center mb-4">
+    <h1 class="page-title">Optical Exam Evaluation System</h1>
+    <p class="page-subtitle">Exam management, automated scanning, and grading platform</p>
+    {% if pending_review %}
+    <a href="{% url 'pending_reviews' %}" class="btn btn-app btn-app-primary mt-2">
+        <i class="bi bi-exclamation-circle me-1"></i>{{ pending_review }} scan{{ pending_review|pluralize }} need review
+    </a>
+    {% endif %}
+</div>
+
+<h2 class="h5 fw-semibold mb-3">Quick Access</h2>
+<div class="home-grid">
+    <div class="home-card home-card--universities">
+        <div class="home-card-icon"><i class="bi bi-building"></i></div>
+        <h5 class="home-card-title">Universities</h5>
+        <p class="home-card-desc">Manage universities and upload custom logos.</p>
+        <div class="home-card-actions">
+            <a href="{% url 'university_create' %}" class="btn btn-app btn-sm home-btn home-btn--solid">Add University</a>
+            <a href="{% url 'university_list' %}" class="btn btn-app btn-sm home-btn home-btn--outline">View All</a>
+        </div>
+    </div>
+
+    <div class="home-card home-card--students">
+        <div class="home-card-icon"><i class="bi bi-people"></i></div>
+        <h5 class="home-card-title">Students</h5>
+        <p class="home-card-desc">Register and manage student records.</p>
+        <div class="home-card-actions">
+            <a href="{% url 'student_create' %}" class="btn btn-app btn-sm home-btn home-btn--solid">Add Student</a>
+            <a href="{% url 'student_list' %}" class="btn btn-app btn-sm home-btn home-btn--outline">View All</a>
+        </div>
+    </div>
+
+    <div class="home-card home-card--courses">
+        <div class="home-card-icon"><i class="bi bi-collection"></i></div>
+        <h5 class="home-card-title">Courses</h5>
+        <p class="home-card-desc">Create and organize academic courses.</p>
+        <div class="home-card-actions">
+            <a href="{% url 'course_create' %}" class="btn btn-app btn-sm home-btn home-btn--solid">Add Course</a>
+            <a href="{% url 'course_list' %}" class="btn btn-app btn-sm home-btn home-btn--outline">View All</a>
+        </div>
+    </div>
+
+    <div class="home-card home-card--exams">
+        <div class="home-card-icon"><i class="bi bi-journal-text"></i></div>
+        <h5 class="home-card-title">Exams</h5>
+        <p class="home-card-desc">Create exams, configure keys, and generate papers.</p>
+        <div class="home-card-actions">
+            <a href="{% url 'exam_create' %}" class="btn btn-app btn-sm home-btn home-btn--solid">New Exam</a>
+            <a href="{% url 'exam_list' %}" class="btn btn-app btn-sm home-btn home-btn--outline">Manage</a>
+        </div>
+    </div>
+
+    <div class="home-card home-card--enrollment">
+        <div class="home-card-icon"><i class="bi bi-person-check"></i></div>
+        <h5 class="home-card-title">Enrollment</h5>
+        <p class="home-card-desc">Enroll students in a course to allow exam submissions.</p>
+        <div class="home-card-actions">
+            <a href="{% url 'enroll_student' %}" class="btn btn-app btn-sm home-btn home-btn--solid">Enroll Student</a>
+        </div>
+    </div>
+
+    <div class="home-card home-card--upload">
+        <div class="home-card-icon"><i class="bi bi-upload"></i></div>
+        <h5 class="home-card-title">Upload &amp; Grade</h5>
+        <p class="home-card-desc">Upload scanned answer sheets for automatic evaluation.</p>
+        <div class="home-card-actions">
+            <a href="{% url 'upload_scanned_paper' %}" class="btn btn-app btn-sm home-btn home-btn--solid">Upload Scan</a>
+            <a href="{% url 'scan_history' %}" class="btn btn-app btn-sm home-btn home-btn--outline">Scan History</a>
+        </div>
+    </div>
+
+    <div class="home-card home-card--results">
+        <div class="home-card-icon"><i class="bi bi-bar-chart"></i></div>
+        <h5 class="home-card-title">Results</h5>
+        <p class="home-card-desc">View scores, export data, and review flagged scans.</p>
+        <div class="home-card-actions">
+            <a href="{% url 'results_list' %}" class="btn btn-app btn-sm home-btn home-btn--solid">View Results</a>
+            <a href="{% url 'pending_reviews' %}" class="btn btn-app btn-sm home-btn home-btn--outline">Reviews</a>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

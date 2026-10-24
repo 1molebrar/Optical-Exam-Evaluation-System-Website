@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+
+{% block title %}Configure Exam — Optical Exam System{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex flex-wrap justify-content-between align-items-start gap-3">
+    <div>
+        <h1 class="page-title">Configure Answer Key</h1>
+        <p class="page-subtitle">
+            {{ exam.title }} — {{ exam.course.code }} ·
+            {{ omr_questions|length }} optical + {{ classical_questions|length }} classical = {{ questions|length }} total questions
+        </p>
+    </div>
+    <div class="toolbar mb-0">
+        <a href="{% url 'exam_manage' exam.id %}" class="btn btn-app btn-app-outline">
+            <i class="bi bi-arrow-left me-1"></i>Manage Exam
+        </a>
+    </div>
+</div>
+
+{% if not configured and omr_questions %}
+<div class="alert alert-warning alert-app">
+    <i class="bi bi-exclamation-triangle me-2"></i>
+    Set correct answers (A–E) for all optical questions before generating papers.
+</div>
+{% endif %}
+
+<form method="post">
+    {% csrf_token %}
+
+    {% if omr_questions %}
+    <div class="app-card mb-3">
+        <div class="app-card-header">
+            <i class="bi bi-ui-checks me-2"></i>Optical Questions (OMR) — {{ omr_questions|length }} question{{ omr_questions|length|pluralize }}
+        </div>
+        <div class="table-responsive">
+            <table class="table table-app mb-0">
+                <thead>
+                    <tr>
+                        <th>Q#</th>
+                        <th>Type</th>
+                        <th>Correct Answer</th>
+                        <th>Points</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for q in omr_questions %}
+                    <tr>
+                        <td><strong>{{ q.question_number }}</strong></td>
+                        <td><span class="badge badge-app badge-primary">OMR</span></td>
+                        <td>
+                            <select class="form-select" name="correct_{{ q.question_number }}" style="width:120px;">
+                                <option value="">--</option>
+                                {% for letter in "ABCDE" %}
+                                <option value="{{ letter }}" {% if q.correct_answer == letter %}selected{% endif %}>{{ letter }}</option>
+                                {% endfor %}
+                            </select>
+                        </td>
+                        <td><input type="number" class="form-control" name="points_{{ q.question_number }}" value="{{ q.points|floatformat:0 }}" style="width:80px;" step="0.5" min="0"></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if classical_questions %}
+    <div class="app-card mb-3">
+        <div class="app-card-header">
+            <i class="bi bi-pencil-square me-2"></i>Classical Questions (Score boxes) — {{ classical_questions|length }} question{{ classical_questions|length|pluralize }}
+        </div>
+        <div class="table-responsive">
+            <table class="table table-app mb-0">
+                <thead>
+                    <tr>
+                        <th>Q#</th>
+                        <th>Type</th>
+                        <th>Max Points (teacher score cap)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for q in classical_questions %}
+                    <tr>
+                        <td><strong>{{ q.question_number }}</strong></td>
+                        <td><span class="badge badge-app badge-warning">Classical</span></td>
+                        <td><input type="number" class="form-control" name="points_{{ q.question_number }}" value="{{ q.points|floatformat:0 }}" style="width:80px;" step="0.5" min="0"></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="app-card mb-3">
+        <div class="app-card-header">
+            <i class="bi bi-card-text me-2"></i>Exam Rules & Instructions
+        </div>
+        <div class="app-card-body">
+            <p class="text-muted small mb-2">These rules will be printed on the right side of the generated exam paper.</p>
+            <textarea class="form-control" name="rules" rows="6" placeholder="Enter any rules or instructions...">{{ exam.rules }}</textarea>
+        </div>
+    </div>
+
+    <div class="toolbar justify-content-center mt-4 mb-4">
+        <button type="submit" class="btn btn-app btn-app-success px-4">
+            <i class="bi bi-check-lg me-1"></i>Save &amp; Generate Papers
+        </button>
+        <a href="{% url 'exam_list' %}" class="btn btn-app btn-app-outline px-4">Back to Exams</a>
+    </div>
+</form>
+{% endblock %}

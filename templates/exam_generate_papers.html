@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block title %}Exam Paper — Optical Exam System{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex flex-wrap justify-content-between align-items-start gap-3">
+    <div>
+        <h1 class="page-title">Exam Paper</h1>
+        <p class="page-subtitle">{{ exam.title }} — {{ exam.course.code }}</p>
+    </div>
+    <div class="toolbar mb-0">
+        {% if exam %}
+        <a href="{% url 'exam_manage' exam.id %}" class="btn btn-app btn-app-outline">
+            <i class="bi bi-arrow-left me-1"></i>Manage Exam
+        </a>
+        {% endif %}
+        <a href="{% url 'exam_list' %}" class="btn btn-app btn-app-outline">
+            <i class="bi bi-list me-1"></i>All Exams
+        </a>
+    </div>
+</div>
+
+<div class="app-card">
+    <div class="app-card-header">
+        <i class="bi bi-file-earmark-image me-2"></i>Answer Sheet
+    </div>
+    <div class="app-card-body">
+        <div class="row mb-3">
+            <div class="col-md-4"><span class="text-muted">Course</span><br><strong>{{ exam.course.code }} — {{ exam.course.name }}</strong></div>
+            <div class="col-md-4"><span class="text-muted">Date</span><br><strong>{{ exam.exam_date }}</strong></div>
+            <div class="col-md-4"><span class="text-muted">Duration</span><br><strong>{{ exam.duration_minutes }} minutes</strong></div>
+        </div>
+
+        {% if exam_paper %}
+        <div class="app-card mb-3" style="max-width: 420px;">
+            <div class="app-card-body">
+                <p class="mb-2 text-muted">Paper code: <strong>{{ exam_paper.paper_code }}</strong></p>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'view_exam_paper' paper_id=exam_paper.id %}?format=png" class="btn btn-app btn-app-primary" target="_blank">
+                        <i class="bi bi-file-image me-1"></i>PNG
+                    </a>
+                    <a href="{% url 'view_exam_paper' paper_id=exam_paper.id %}?format=pdf" class="btn btn-app btn-app-primary" target="_blank">
+                        <i class="bi bi-file-pdf me-1"></i>PDF
+                    </a>
+                    <a href="{% url 'view_exam_paper' paper_id=exam_paper.id %}?format=docx" class="btn btn-app btn-app-primary" target="_blank">
+                        <i class="bi bi-file-word me-1"></i>Word
+                    </a>
+                </div>
+                {% if paper_created %}
+                <span class="badge badge-app badge-success ms-2">Newly generated</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="alert alert-info alert-app">
+            <strong>How it works:</strong> Download the PNG answer sheet (300 DPI). Print at 100% scale and give the same sheet to all enrolled students. Students write their name and ID, then you upload scans for auto-grading.
+        </div>
+        {% else %}
+        <div class="alert alert-warning alert-app">
+            Could not generate the exam paper. Please try again from the exam list.
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

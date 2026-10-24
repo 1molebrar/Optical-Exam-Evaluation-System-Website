@@ -1,0 +1,201 @@
+{% extends 'base.html' %}
+
+{% block title %}Review Scan — Optical Exam System{% endblock %}
+
+{% block content %}
+<div class="toolbar d-flex flex-wrap justify-content-between align-items-center gap-2">
+    <div class="d-flex flex-wrap gap-2">
+        <a href="{% url 'scan_history' %}" class="btn btn-app btn-app-outline">
+            <i class="bi bi-clock-history me-1"></i>Scan History
+        </a>
+        <a href="{% url 'pending_reviews' %}" class="btn btn-app btn-app-outline">
+            <i class="bi bi-clipboard-check me-1"></i>Pending Reviews
+        </a>
+    </div>
+    <form method="post" action="{% url 'delete_scanned_paper' scanned.id %}"
+          onsubmit="return confirm('Delete scan #{{ scanned.id }} permanently? This cannot be undone.');">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-app btn-app-danger">
+            <i class="bi bi-trash me-1"></i>Delete Scan
+        </button>
+    </form>
+</div>
+
+<div class="page-header">
+    <h1 class="page-title">Review Answer Sheet #{{ scanned.id }}</h1>
+    <p class="page-subtitle">
+        Exam: <strong>{{ scanned.matched_exam.title|default:"—" }}</strong>
+        {% if scanned.matched_exam %}
+        ({{ scanned.matched_exam.course.code }})
+        {% endif %}
+        · OCR ID: <strong>{{ scanned.ocr_student_id|default:"—" }}</strong>
+        · Status: <strong>{{ scanned.status }}</strong>
+    </p>
+</div>
+
+{% if error %}
+<div class="alert alert-danger alert-app">{{ error }}</div>
+{% endif %}
+
+{% if not scanned.matched_exam %}
+<div class="alert alert-danger alert-app">
+    Exam could not be identified from the QR code. Re-upload a clear scan with the QR visible.
+</div>
+{% endif %}
+
+{% if scanned.matched_student %}
+<div class="alert alert-app {% if not_enrolled %}alert-warning{% else %}alert-success{% endif %}">
+    {% if not_enrolled %}
+    Student detected from ID boxes:
+    {% else %}
+    Student recognized from ID boxes:
+    {% endif %}
+    <strong>{{ scanned.matched_student.full_name }}</strong>
+    ({{ scanned.matched_student.student_id }})
+    {% if not_enrolled %}
+    — not enrolled in {{ scanned.matched_exam.course.code }}.
+    <a href="{% url 'enroll_student' %}?course_id={{ scanned.matched_exam.course.id }}">Enroll in course</a> before saving.
+    {% endif %}
+</div>
+{% elif scanned.ocr_student_id %}
+<div class="alert alert-warning alert-app">
+    OCR read <strong>{{ scanned.ocr_student_id }}</strong> but no student could be matched automatically.
+    Select the correct student below.
+</div>
+{% endif %}
+
+{% if suggested_students and not scanned.matched_student %}
+<div class="alert alert-info alert-app">
+    Suggested matches from ID boxes:
+    {% for student in suggested_students %}
+    <span class="badge badge-app badge-primary me-1">{{ student.full_name }} ({{ student.student_id }})</span>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="row g-4 mb-4">
+    <div class="col-md-5">
+        {% if scanned.image %}
+        <img src="{{ scanned.image.url }}" alt="Scan" class="img-fluid rounded border w-100">
+        {% endif %}
+    </div>
+    <div class="col-md-7">
+        {% if grading %}
+        <div class="stat-box mb-4 text-center">
+            <div class="stat-label">Calculated Score</div>
+            <div class="stat-value">{{ grading.earned_points }} / {{ grading.total_points }}</div>
+            <p class="text-muted mb-2">{{ grading.score }}%</p>
+            <div class="d-flex flex-wrap justify-content-center gap-2">
+                <span class="badge badge-app badge-success">Correct: {{ grading.correct_count }}</span>
+                <span class="badge badge-app badge-danger">Wrong: {{ grading.wrong_count }}</span>
+                <span class="badge badge-app badge-muted">Blank: {{ grading.blank_count }}</span>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if scanned.matched_exam %}
+        <div class="app-card">
+            <div class="app-card-header">Approve Result</div>
+            <div class="app-card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    {% if scanned.matched_student and not not_enrolled %}
+                    <input type="hidden" name="student_id" value="{{ scanned.matched_student.id }}">
+                    <p class="mb-3">
+                        <strong>Student:</strong> {{ scanned.matched_student.full_name }}<br>
+                        <strong>Exam:</strong> {{ scanned.matched_exam.title }}
+                    </p>
+                    <button type="submit" class="btn btn-app btn-app-success btn-lg w-100">
+                        <i class="bi bi-check-lg me-1"></i>Approve &amp; Save Result
+                    </button>
+                    {% elif course_students %}
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Assign Enrolled Student</label>
+                        <select name="student_id" class="form-select" required>
+                            <option value="">— Select student —</option>
+                            {% for student in course_students %}
+                            <option value="{{ student.id }}"
+                                {% if scanned.matched_student and scanned.matched_student.id == student.id %}selected{% endif %}>
+                                {{ student.full_name }} ({{ student.student_id }})
+                                {% if student.id in suggested_student_ids %} — suggested{% endif %}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-app btn-app-success btn-lg w-100">
+                        <i class="bi bi-check-lg me-1"></i>Approve &amp; Save Result
+                    </button>
+                    {% elif not_enrolled %}
+                    <div class="alert alert-warning alert-app mb-0">
+                        This student is not enrolled in {{ scanned.matched_exam.course.code }}.
+                        <a href="{% url 'enroll_student' %}?course_id={{ scanned.matched_exam.course.id }}">Enroll in course</a>
+                        before saving a result.
+                    </div>
+                    {% else %}
+                    <div class="alert alert-secondary alert-app mb-0">
+                        No students enrolled in {{ scanned.matched_exam.course.code }}.
+                        <a href="{% url 'enroll_student' %}?course_id={{ scanned.matched_exam.course.id }}">Enroll students</a>
+                        first, then return to this review.
+                    </div>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% if answer_details %}
+<div class="app-card">
+    <div class="app-card-header">Per-Question Breakdown (preview)</div>
+    <div class="table-responsive">
+        <table class="table table-app mb-0">
+            <thead>
+                <tr>
+                    <th>Q#</th>
+                    <th>Type</th>
+                    <th>Correct / Max</th>
+                    <th>Detected</th>
+                    <th>Points</th>
+                    <th>Earned</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ans in answer_details %}
+                <tr>
+                    <td><strong>{{ ans.question_number }}</strong></td>
+                    <td>{{ ans.section }}</td>
+                    <td>{{ ans.correct_answer }}</td>
+                    <td>
+                        {% if ans.detected and ans.detected != 'BLANK' %}
+                        <span class="badge badge-app {% if ans.is_correct %}badge-success{% elif ans.is_partial %}badge-warning{% else %}badge-danger{% endif %}">{{ ans.detected }}</span>
+                        {% else %}
+                        <span class="badge badge-app badge-muted">BLANK</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ ans.question_points }}</td>
+                    <td><strong>{{ ans.earned_points }}</strong></td>
+                    <td>
+                        {% if ans.exceeds_max %}
+                        <span class="badge badge-app badge-danger">Exceeds max ({{ ans.question_points }} pts)</span>
+                        {% elif ans.needs_review and ans.correct_answer == 'Not set' %}
+                        <span class="badge badge-app badge-warning">No answer key</span>
+                        {% elif ans.is_correct %}
+                        <span class="badge badge-app badge-success">Correct</span>
+                        {% elif ans.is_partial %}
+                        <span class="badge badge-app badge-warning">Partial</span>
+                        {% elif ans.detected == 'BLANK' %}
+                        <span class="badge badge-app badge-muted">Blank</span>
+                        {% else %}
+                        <span class="badge badge-app badge-danger">Wrong</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
